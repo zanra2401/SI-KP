@@ -98,7 +98,7 @@ Password demo bawaan: `password` (dapat diubah via `.env`)
 
 | Peran | Akun Login (NIM / NIP / Email) | Password | Keterangan & Skenario Uji |
 |---|---|---|---|
-| **Root Administrator** | `root@trunojoyo.ac.id` | `password` | **Otoritas Tertinggi (Super User Root):** Pusat kendali sistem, manajemen seluruh akun dosen & staff (satu tabel terpadu & satu import Excel), penetapan Dekan Fakultas, penugasan peran, dan login troubleshooting (*Login As / Impersonate*) |
+| **Root Administrator** | `root@trunojoyo.ac.id` | `password` | **Otoritas Tertinggi (Super User Root):** Pusat kendali sistem, manajemen seluruh akun dosen & staff (satu tabel terpadu & satu import Excel), penetapan Jabatan Dekan Fakultas & Koordinator Program Studi, penugasan peran, dan login troubleshooting (*Login As / Impersonate*) |
 | **Mahasiswa (KP Aktif)** | `230411100092`<br>`230411100092@student.trunojoyo.ac.id` | `password` | Status KP aktif di PT Petrokimia Gresik, logbook terisi |
 | **Mahasiswa (Verifikasi TU)** | `230411100080`<br>`230411100080@student.trunojoyo.ac.id` | `password` | Masuk ke antrean verifikasi pendaftaran berkas TU |
 | **Mahasiswa (Google SSO)** | `240411100144`<br>`240411100144@student.trunojoyo.ac.id` | `password` | Akun mahasiswa pengujian OAuth Google Workspace UTM |

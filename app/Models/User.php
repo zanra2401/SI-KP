@@ -31,6 +31,7 @@ class User extends Authenticatable
         'roles_assignment',
         'active_role',
         'is_dekan',
+        'is_kaprodi',
         'is_root',
         'role',
         'status_akun',
@@ -83,6 +84,7 @@ class User extends Authenticatable
             'user_type' => 'string',
             'roles_assignment' => 'array',
             'is_dekan' => 'boolean',
+            'is_kaprodi' => 'boolean',
             'is_root' => 'boolean',
             'bidang_keahlian' => 'array',
             'must_change_password' => 'boolean',
@@ -127,7 +129,7 @@ class User extends Authenticatable
         }
 
         // Mapping alias fungsional
-        if ($roleLower === 'prodi' && in_array('koor_prodi', $assigned)) {
+        if ($roleLower === 'prodi' && (in_array('koor_kp', $assigned) || in_array('koor_prodi', $assigned))) {
             return true;
         }
         if ($roleLower === 'dosen' && (in_array('dosen_pembimbing', $assigned) || $this->user_type === 'dosen')) {
@@ -173,6 +175,24 @@ class User extends Authenticatable
     public static function getDekan(): ?self
     {
         return static::where('is_dekan', true)->first();
+    }
+
+    /**
+     * Helper untuk menetapkan Koordinator Program Studi (hanya boleh ada 1 Kaprodi dalam sistem).
+     */
+    public function assignAsKaprodi(): void
+    {
+        // Reset kaprodi lama
+        static::where('is_kaprodi', true)->where('id', '!=', $this->id)->update(['is_kaprodi' => false]);
+        $this->update(['is_kaprodi' => true]);
+    }
+
+    /**
+     * Mendapatkan dosen yang saat ini menjabat sebagai Koordinator Program Studi.
+     */
+    public static function getKaprodi(): ?self
+    {
+        return static::where('is_kaprodi', true)->first();
     }
 
     public function isMahasiswa(): bool

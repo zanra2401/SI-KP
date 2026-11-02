@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,10 +22,23 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class AdminDashboardController extends Controller
 {
     /**
+     * Pastikan kolom is_kaprodi tersedia di tabel users.
+     */
+    private function ensureKaprodiColumn(): void
+    {
+        if (!Schema::hasColumn('users', 'is_kaprodi')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->boolean('is_kaprodi')->default(false)->after('is_dekan');
+            });
+        }
+    }
+
+    /**
      * Halaman Dashboard Utama Super User / Super Admin.
      */
     public function index(Request $request): Response
     {
+        $this->ensureKaprodiColumn();
         $currentUser = $request->user();
 
         // 1. Data Pegawai (Dosen & Staff digabung menjadi satu dataset)
@@ -35,8 +50,8 @@ class AdminDashboardController extends Controller
         ->get()
         ->map(function ($u) {
             $roles = is_array($u->roles_assignment) ? $u->roles_assignment : [];
-            if ($u->role === 'prodi' && !in_array('koor_prodi', $roles)) {
-                $roles[] = 'koor_prodi';
+            if ($u->role === 'prodi' && !in_array('koor_prodi', $roles) && !in_array('koor_kp', $roles)) {
+                $roles[] = 'koor_kp';
             }
             if ($u->role === 'tu' && !in_array('tu', $roles)) {
                 $roles[] = 'tu';
@@ -61,6 +76,7 @@ class AdminDashboardController extends Controller
                 'no_telepon' => $u->no_telepon ?? '-',
                 'roles_assignment' => array_values(array_unique($roles)),
                 'is_dekan' => (bool) $u->is_dekan,
+                'is_kaprodi' => (bool) $u->is_kaprodi,
                 'is_superadmin' => $u->isSuperAdmin(),
                 'is_root' => (bool) $u->is_root,
                 'status_akun' => $u->status_akun ?? 'aktif',
@@ -96,8 +112,9 @@ class AdminDashboardController extends Controller
             ];
         });
 
-        // 3. Dekan Aktif
+        // 3. Dekan Aktif & Koordinator Program Studi Aktif
         $dekanAktif = User::where('is_dekan', true)->first(['id', 'name', 'nip', 'email']);
+        $kaprodiAktif = User::where('is_kaprodi', true)->first(['id', 'name', 'nip', 'email']);
 
         // 4. Statistik
         $stats = [
@@ -118,6 +135,7 @@ class AdminDashboardController extends Controller
             'staffs' => $staffs,
             'unassigned_users' => $unassignedUsers,
             'dekan_aktif' => $dekanAktif,
+            'kaprodi_aktif' => $kaprodiAktif,
             'is_root' => (bool) $currentUser->is_root,
         ]);
     }
@@ -160,8 +178,9 @@ class AdminDashboardController extends Controller
         $password = !empty($validated['password']) ? $validated['password'] : 'password';
         $userType = $validated['user_type'];
 
+        $isProdiRole = in_array('koor_kp', $roles) || in_array('koor_prodi', $roles);
         $role = $userType === 'dosen'
-            ? (in_array('koor_prodi', $roles) ? 'prodi' : 'dosen')
+            ? ($isProdiRole ? 'prodi' : 'dosen')
             : (in_array('tu', $roles) ? 'tu' : 'staff');
 
         User::create([
@@ -231,8 +250,9 @@ class AdminDashboardController extends Controller
         $pegawai->bidang_keahlian = $bidang;
         $pegawai->user_type = $userType;
         $pegawai->roles_assignment = $roles;
+        $isProdiRole = in_array('koor_kp', $roles) || in_array('koor_prodi', $roles);
         $pegawai->role = $userType === 'dosen'
-            ? (in_array('koor_prodi', $roles) ? 'prodi' : 'dosen')
+            ? ($isProdiRole ? 'prodi' : 'dosen')
             : (in_array('tu', $roles) ? 'tu' : 'staff');
 
         if (!empty($validated['password'])) {
@@ -475,6 +495,26 @@ class AdminDashboardController extends Controller
         });
 
         return back()->with('success', "Jabatan Dekan berhasil ditetapkan kepada {$dosen->name}!");
+    }
+
+    /**
+     * Penetapan Jabatan Koordinator Program Studi (Single Kaprodi Switcher).
+     */
+    public function setKaprodi(Request $request): RedirectResponse
+    {
+        $this->ensureKaprodiColumn();
+
+        $validated = $request->validate([
+            'dosen_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $dosen = User::findOrFail($validated['dosen_id']);
+
+        DB::transaction(function () use ($dosen) {
+            $dosen->assignAsKaprodi();
+        });
+
+        return back()->with('success', "Jabatan Koordinator Program Studi berhasil ditetapkan kepada {$dosen->name}!");
     }
 
     /**

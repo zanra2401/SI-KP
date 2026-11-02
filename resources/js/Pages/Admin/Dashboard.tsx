@@ -47,6 +47,7 @@ interface PegawaiItem {
     no_telepon?: string;
     roles_assignment: string[];
     is_dekan: boolean;
+    is_kaprodi?: boolean;
     is_superadmin: boolean;
     is_root: boolean;
     status_akun: string;
@@ -59,6 +60,7 @@ interface Props {
     staffs?: PegawaiItem[];
     unassigned_users?: UnassignedItem[];
     dekan_aktif: Dekan | null;
+    kaprodi_aktif?: Dekan | null;
     is_root: boolean;
 }
 
@@ -69,6 +71,7 @@ export default function AdminDashboard({
     staffs = [], 
     unassigned_users = [], 
     dekan_aktif, 
+    kaprodi_aktif = null,
     is_root 
 }: Props) {
     // Tab navigasi utama: 'all' | 'dosen' | 'staff' | 'unassigned'
@@ -114,6 +117,11 @@ export default function AdminDashboard({
         dosen_id: dekan_aktif?.id ? String(dekan_aktif.id) : '',
     });
 
+    // Form Koordinator Program Studi Switcher
+    const kaprodiForm = useForm({
+        dosen_id: kaprodi_aktif?.id ? String(kaprodi_aktif.id) : '',
+    });
+
     // Form Import Excel Pegawai Tunggal
     const importForm = useForm({
         file_excel: null as File | null,
@@ -124,6 +132,15 @@ export default function AdminDashboard({
         e.preventDefault();
         if (!dekanForm.data.dosen_id) return;
         dekanForm.post(route('admin.set-dekan'), {
+            preserveScroll: true,
+        });
+    };
+
+    // Handle Koordinator Program Studi Switcher
+    const handleSetKaprodi = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!kaprodiForm.data.dosen_id) return;
+        kaprodiForm.post(route('admin.set-kaprodi'), {
             preserveScroll: true,
         });
     };
@@ -290,13 +307,13 @@ export default function AdminDashboard({
                 </div>
             </div>
 
-            {/* Banner Otoritas Super User & Dekan Switcher */}
-            <div className="bg-gradient-to-r from-indigo-950 via-indigo-900 to-blue-900 text-white rounded-2xl p-5 sm:p-6 shadow-sm border border-indigo-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Banner Otoritas Super User & Penetapan Jabatan (Dekan & Koordinator Prodi) */}
+            <div className="bg-gradient-to-r from-indigo-950 via-indigo-900 to-blue-900 text-white rounded-2xl p-5 sm:p-6 shadow-sm border border-indigo-800 space-y-5">
                 <div className="flex items-start gap-3.5">
-                    <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 text-indigo-200 flex items-center justify-center shrink-0">
-                        <ShieldAlert className="w-6 h-6 text-indigo-300" />
+                    <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/20 text-indigo-200 flex items-center justify-center shrink-0">
+                        <ShieldAlert className="w-5 h-5 text-indigo-300" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                             <h2 className="text-base sm:text-lg font-bold">
                                 {is_root ? 'Root Administrator (Otoritas Tertinggi)' : 'Super User Administrator'}
@@ -305,49 +322,98 @@ export default function AdminDashboard({
                                 {is_root ? 'System Root' : 'Superadmin'}
                             </span>
                         </div>
-                        <p className="text-xs text-indigo-200 mt-1 max-w-2xl leading-relaxed">
+                        <p className="text-xs text-indigo-200 mt-1 max-w-3xl leading-relaxed">
                             {is_root 
-                                ? 'Sebagai Root User, Anda memiliki wewenang untuk menetapkan Super User lain, mengelola seluruh data Pegawai (Dosen & Staff), penugasan peran, dan penetapan Dekan.'
-                                : 'Anda memiliki hak Super User untuk mengelola akun Pegawai (Dosen & Staff), penugasan tugas fungsional, serta login impersonate.'}
+                                ? 'Sebagai Root User, Anda memiliki wewenang untuk menetapkan Super User lain, mengelola seluruh data Pegawai (Dosen & Staff), penugasan peran, serta menetapkan Jabatan Dekan dan Koordinator Program Studi.'
+                                : 'Anda memiliki hak Super User untuk mengelola akun Pegawai (Dosen & Staff), penugasan tugas fungsional, penetapan Jabatan Dekan & Koordinator Program Studi, serta login impersonate.'}
                         </p>
                     </div>
                 </div>
 
-                {/* Penetapan Dekan Fakultas Teknik (Single Dekan Switcher) */}
-                <form onSubmit={handleSetDekan} className="bg-white/10 p-3 sm:p-3.5 rounded-xl border border-white/15 shrink-0 space-y-2 min-w-[280px]">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
-                            <Award className="w-3.5 h-3.5" />
-                            Penetapan Dekan Fakultas
-                        </span>
-                        {dekan_aktif && (
-                            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-400/30">
-                                Aktif
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <select
-                            value={dekanForm.data.dosen_id}
-                            onChange={(e) => dekanForm.setData('dosen_id', e.target.value)}
-                            className="w-full text-xs bg-slate-900/90 text-white rounded-lg border border-indigo-300/40 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400"
-                        >
-                            <option value="" disabled>-- Pilih Dosen untuk Dekan --</option>
-                            {dosens.map((d) => (
-                                <option key={d.id} value={d.id}>
-                                    {d.name} {d.is_dekan ? '(Dekan Saat Ini)' : ''}
-                                </option>
-                            ))}
-                        </select>
-                        <button
-                            type="submit"
-                            disabled={dekanForm.processing || !dekanForm.data.dosen_id}
-                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition disabled:opacity-50 shrink-0 cursor-pointer"
-                        >
-                            Tetapkan
-                        </button>
-                    </div>
-                </form>
+                {/* Panel Penetapan Jabatan Tunggal: Dekan Fakultas & Koordinator Program Studi */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 border-t border-white/15">
+                    {/* 1. Penetapan Dekan Fakultas (Single Dekan Switcher) */}
+                    <form onSubmit={handleSetDekan} className="min-w-0 bg-white/10 p-3.5 sm:p-4 rounded-xl border border-white/15 flex flex-col justify-between gap-2.5">
+                        <div className="flex items-start justify-between gap-2 min-w-0">
+                            <div className="min-w-0 flex-1">
+                                <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
+                                    <Award className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate">Jabatan Dekan Fakultas</span>
+                                </span>
+                                <p className="text-xs text-indigo-100 font-medium truncate mt-1" title={dekan_aktif ? `${dekan_aktif.name} (${dekan_aktif.nip || '-'})` : 'Belum ditetapkan'}>
+                                    Pejabat Aktif: <strong className="text-white">{dekan_aktif ? dekan_aktif.name : 'Belum Ditetapkan'}</strong>
+                                </p>
+                            </div>
+                            {dekan_aktif && (
+                                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-400/30 shrink-0">
+                                    Aktif
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2 min-w-0">
+                            <select
+                                value={dekanForm.data.dosen_id}
+                                onChange={(e) => dekanForm.setData('dosen_id', e.target.value)}
+                                className="min-w-0 flex-1 truncate text-xs bg-slate-900/90 text-white rounded-lg border border-indigo-300/40 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                            >
+                                <option value="" disabled>-- Pilih Dosen untuk Dekan --</option>
+                                {dosens.map((d) => (
+                                    <option key={d.id} value={d.id}>
+                                        {d.name} {d.is_dekan ? '• (Aktif)' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <button
+                                type="submit"
+                                disabled={dekanForm.processing || !dekanForm.data.dosen_id}
+                                className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition disabled:opacity-50 shrink-0 cursor-pointer"
+                            >
+                                Tetapkan
+                            </button>
+                        </div>
+                    </form>
+
+                    {/* 2. Penetapan Koordinator Program Studi (Single Kaprodi Switcher) */}
+                    <form onSubmit={handleSetKaprodi} className="min-w-0 bg-white/10 p-3.5 sm:p-4 rounded-xl border border-white/15 flex flex-col justify-between gap-2.5">
+                        <div className="flex items-start justify-between gap-2 min-w-0">
+                            <div className="min-w-0 flex-1">
+                                <span className="text-[11px] font-bold text-cyan-300 flex items-center gap-1.5 uppercase tracking-wider">
+                                    <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate">Jabatan Koordinator Program Studi</span>
+                                </span>
+                                <p className="text-xs text-indigo-100 font-medium truncate mt-1" title={kaprodi_aktif ? `${kaprodi_aktif.name} (${kaprodi_aktif.nip || '-'})` : 'Belum ditetapkan'}>
+                                    Pejabat Aktif: <strong className="text-white">{kaprodi_aktif ? kaprodi_aktif.name : 'Belum Ditetapkan'}</strong>
+                                </p>
+                            </div>
+                            {kaprodi_aktif && (
+                                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold border border-emerald-400/30 shrink-0">
+                                    Aktif
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2 min-w-0">
+                            <select
+                                value={kaprodiForm.data.dosen_id}
+                                onChange={(e) => kaprodiForm.setData('dosen_id', e.target.value)}
+                                className="min-w-0 flex-1 truncate text-xs bg-slate-900/90 text-white rounded-lg border border-indigo-300/40 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                            >
+                                <option value="" disabled>-- Pilih Koordinator Program Studi --</option>
+                                {dosens.map((d) => (
+                                    <option key={d.id} value={d.id}>
+                                        {d.name} {d.is_kaprodi ? '• (Aktif)' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <button
+                                type="submit"
+                                disabled={kaprodiForm.processing || !kaprodiForm.data.dosen_id}
+                                className="px-3.5 py-2 bg-cyan-400 hover:bg-cyan-500 text-slate-950 font-bold text-xs rounded-lg transition disabled:opacity-50 shrink-0 cursor-pointer"
+                            >
+                                Tetapkan
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             {/* Banner Notifikasi Akun Baru SSO yang belum di-assign peran */}
@@ -574,9 +640,9 @@ export default function AdminDashboard({
                                                         Pembimbing KP
                                                     </span>
                                                 )}
-                                                {p.roles_assignment.includes('koor_prodi') && (
+                                                {(p.roles_assignment.includes('koor_kp') || p.roles_assignment.includes('koor_prodi')) && (
                                                     <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-100 text-indigo-900 border border-indigo-300">
-                                                        Koor Prodi
+                                                        Koordinator KP
                                                     </span>
                                                 )}
                                                 {p.roles_assignment.includes('penguji_sidang') && (
@@ -603,14 +669,24 @@ export default function AdminDashboard({
                                             </div>
                                         </ModernTableTd>
                                         <ModernTableTd className="text-center">
-                                            {p.is_dekan ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300">
-                                                    <Award className="w-3 h-3 text-amber-600" /> Dekan
-                                                </span>
-                                            ) : p.is_root ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-indigo-50 text-indigo-800 border border-indigo-300">
-                                                    ROOT
-                                                </span>
+                                            {p.is_dekan || p.is_kaprodi || p.is_root ? (
+                                                <div className="flex flex-wrap items-center justify-center gap-1">
+                                                    {p.is_dekan && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300">
+                                                            <Award className="w-3 h-3 text-amber-600" /> Dekan
+                                                        </span>
+                                                    )}
+                                                    {p.is_kaprodi && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-cyan-50 text-cyan-800 border border-cyan-300">
+                                                            <GraduationCap className="w-3 h-3 text-cyan-600" /> Koor Prodi
+                                                        </span>
+                                                    )}
+                                                    {p.is_root && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-indigo-50 text-indigo-800 border border-indigo-300">
+                                                            ROOT
+                                                        </span>
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <span className="text-slate-300 text-xs">-</span>
                                             )}
@@ -911,16 +987,17 @@ export default function AdminDashboard({
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
                                                     type="checkbox"
-                                                    checked={pegawaiForm.data.roles.includes('koor_prodi')}
+                                                    checked={pegawaiForm.data.roles.includes('koor_kp') || pegawaiForm.data.roles.includes('koor_prodi')}
                                                     onChange={(e) => {
+                                                        const cleanRoles = pegawaiForm.data.roles.filter(r => r !== 'koor_kp' && r !== 'koor_prodi');
                                                         const roles = e.target.checked
-                                                            ? [...pegawaiForm.data.roles, 'koor_prodi']
-                                                            : pegawaiForm.data.roles.filter(r => r !== 'koor_prodi');
+                                                            ? [...cleanRoles, 'koor_kp']
+                                                            : cleanRoles;
                                                         pegawaiForm.setData('roles', roles);
                                                     }}
                                                     className="rounded text-indigo-600 focus:ring-indigo-500"
                                                 />
-                                                <span className="font-semibold text-slate-700">Koordinator Program Studi (Koor Prodi)</span>
+                                                <span className="font-semibold text-slate-700">Koordinator Kerja Praktik (Koordinator KP)</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -1210,16 +1287,17 @@ export default function AdminDashboard({
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
                                                     type="checkbox"
-                                                    checked={assignForm.data.roles.includes('koor_prodi')}
+                                                    checked={assignForm.data.roles.includes('koor_kp') || assignForm.data.roles.includes('koor_prodi')}
                                                     onChange={(e) => {
+                                                        const cleanRoles = assignForm.data.roles.filter(r => r !== 'koor_kp' && r !== 'koor_prodi');
                                                         const roles = e.target.checked
-                                                            ? [...assignForm.data.roles, 'koor_prodi']
-                                                            : assignForm.data.roles.filter(r => r !== 'koor_prodi');
+                                                            ? [...cleanRoles, 'koor_kp']
+                                                            : cleanRoles;
                                                         assignForm.setData('roles', roles);
                                                     }}
                                                     className="rounded text-indigo-600 focus:ring-indigo-500"
                                                 />
-                                                <span className="font-semibold text-slate-800">Koordinator Program Studi (Koor Prodi)</span>
+                                                <span className="font-semibold text-slate-800">Koordinator Kerja Praktik (Koordinator KP)</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input

@@ -112,6 +112,8 @@ class TUSuratPengantarController extends Controller
             $confirmationToken = $surat?->confirmation_token ?? \Illuminate\Support\Str::random(64);
             $verificationId = $surat?->verification_id ?: (new \App\Services\DigitalSignatureService())->generateVerificationId('SP');
 
+            $dekan = \App\Models\User::getDekan();
+
             $pendaftaran->suratPengantar()->updateOrCreate(
                 ['pendaftaran_id' => $pendaftaran->id],
                 [
@@ -121,8 +123,8 @@ class TUSuratPengantarController extends Controller
                     'confirmation_token' => $confirmationToken,
                     'confirmation_status' => $surat?->confirmation_status ?: 'pending',
                     'verification_id' => $verificationId,
-                    'ditandatangani_oleh' => config('sikp.dekan.nama', 'Ari Basuki, S.T., M.T.'),
-                    'nip_penandatangan' => config('sikp.dekan.nip', '197801202003121002'),
+                    'ditandatangani_oleh' => $dekan?->name ?: config('sikp.dekan.nama', 'Ari Basuki, S.T., M.T.'),
+                    'nip_penandatangan' => $dekan?->nip ?: config('sikp.dekan.nip', '197801202003121002'),
                 ]
             );
 

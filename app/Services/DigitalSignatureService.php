@@ -18,7 +18,8 @@ class DigitalSignatureService
     }
 
     /**
-     * Mengambil data profil pejabat penandatangan dari konfigurasi sistem.
+     * Mengambil data profil pejabat penandatangan dari database jabatan aktif
+     * atau fallback ke konfigurasi sistem.
      * 
      * @param string $role dekan|kaprodi|koordinator_kp
      */
@@ -26,9 +27,30 @@ class DigitalSignatureService
     {
         $config = config("sikp.{$role}", []);
 
+        $nama = $config['nama'] ?? 'Ari Basuki, S.T., M.T.';
+        $nip = $config['nip'] ?? '197801202003121002';
+
+        try {
+            if ($role === 'dekan') {
+                $dekanUser = \App\Models\User::getDekan();
+                if ($dekanUser) {
+                    $nama = $dekanUser->name;
+                    $nip = $dekanUser->nip ?: $nip;
+                }
+            } elseif ($role === 'kaprodi') {
+                $kaprodiUser = \App\Models\User::getKaprodi();
+                if ($kaprodiUser) {
+                    $nama = $kaprodiUser->name;
+                    $nip = $kaprodiUser->nip ?: $nip;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback ke config jika tabel/kolom belum tersedia
+        }
+
         return [
-            'nama' => $config['nama'] ?? 'Ari Basuki, S.T., M.T.',
-            'nip' => $config['nip'] ?? '197801202003121002',
+            'nama' => $nama,
+            'nip' => $nip,
             'jabatan' => $config['jabatan'] ?? 'Dekan Fakultas Teknik',
             'ttd_path' => $config['ttd_path'] ?? null,
             'ttd_exists' => !empty($config['ttd_path']) && file_exists(public_path($config['ttd_path'])),

@@ -351,8 +351,9 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('admin')->name('admin.')-
     // Penetapan Peran & Tugas Akun Baru SSO
     Route::post('/users/{id}/assign-role', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'assignRole'])->name('users.assign-role');
 
-    // Penetapan Jabatan Dekan (Single Dekan Switcher)
+    // Penetapan Jabatan Dekan & Koordinator Program Studi (Single Switcher)
     Route::post('/set-dekan', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'setDekan'])->name('set-dekan');
+    Route::post('/set-kaprodi', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'setKaprodi'])->name('set-kaprodi');
 
     // Import Excel & Download Template Sederhana
     Route::post('/import-users', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'importUsers'])->name('import-users');
