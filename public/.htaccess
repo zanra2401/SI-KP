@@ -1,3 +1,11 @@
+<IfModule mod_env.c>
+    SetEnv no-gzip 1
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-transform"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

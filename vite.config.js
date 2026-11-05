@@ -18,4 +18,24 @@ export default defineConfig({
             '@': path.resolve(__dirname, 'resources/js'),
         },
     },
+    build: {
+        chunkSizeWarningLimit: 800,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('lodash')) {
+                            return 'vendor-lodash';
+                        }
+                        if (id.includes('@headlessui')) {
+                            return 'vendor-ui';
+                        }
+                        if (id.includes('axios') || id.includes('qs')) {
+                            return 'vendor-http';
+                        }
+                    }
+                },
+            },
+        },
+    },
 });

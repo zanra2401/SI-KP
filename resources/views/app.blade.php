@@ -3,6 +3,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        @if(app()->environment('production') || str_starts_with(strtolower((string) config('app.url')), 'https://') || request()->header('x-forwarded-proto') === 'https')
+        <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+        @endif
 
         <title inertia>{{ config('app.name', 'SI-KP Teknik Informatika') }}</title>
 
@@ -168,26 +171,60 @@
         </div>
 
         <script>
-            // Fallback safety check: dismiss once React has mounted or display status
-            window.addEventListener('load', function() {
-                setTimeout(function() {
+            (function() {
+                var retried = false;
+
+                function hideSplash() {
                     var splash = document.getElementById('app-splash-screen');
-                    var app = document.getElementById('app');
                     if (splash && !splash.classList.contains('splash-hidden')) {
-                        if (app && app.children.length > 0) {
-                            splash.classList.add('splash-hidden');
-                            setTimeout(function() {
-                                if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
-                            }, 450);
-                        } else {
-                            var status = splash.querySelector('.splash-status');
-                            if (status) {
-                                status.textContent = 'Memuat antarmuka...';
-                            }
-                        }
+                        splash.classList.add('splash-hidden');
+                        setTimeout(function() {
+                            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+                        }, 450);
                     }
-                }, 4000);
-            });
+                }
+
+                // Auto-recover if a cached/truncated module script fails to parse
+                window.addEventListener('error', function(e) {
+                    var app = document.getElementById('app');
+                    if (!retried && app && app.children.length === 0 && e && e.filename && e.filename.indexOf('/build/assets/') !== -1) {
+                        retried = true;
+                        var status = document.querySelector('#app-splash-screen .splash-status');
+                        if (status) status.textContent = 'Memuat ulang aset...';
+                        var sep = e.filename.indexOf('?') === -1 ? '?' : '&';
+                        import(e.filename + sep + 'v=' + Date.now()).catch(function() {});
+                    }
+                }, true);
+
+                // Fallback safety check: dismiss once React has mounted
+                var checkInterval = setInterval(function() {
+                    var app = document.getElementById('app');
+                    if (app && app.children.length > 0) {
+                        clearInterval(checkInterval);
+                        hideSplash();
+                    }
+                }, 150);
+
+                window.addEventListener('load', function() {
+                    setTimeout(function() {
+                        clearInterval(checkInterval);
+                        var app = document.getElementById('app');
+                        if (app && app.children.length > 0) {
+                            hideSplash();
+                        } else {
+                            // Reload module scripts with cache-buster if still empty
+                            var scripts = document.querySelectorAll('script[type="module"][src*="/build/assets/"]');
+                            scripts.forEach(function(s) {
+                                var src = s.getAttribute('src');
+                                if (src && src.indexOf('v=') === -1) {
+                                    import(src + (src.indexOf('?') === -1 ? '?' : '&') + 'v=' + Date.now()).catch(function() {});
+                                }
+                            });
+                            setTimeout(hideSplash, 1500);
+                        }
+                    }, 2500);
+                });
+            })();
         </script>
 
         @inertia
