@@ -18,13 +18,10 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): Response
     {
-        $demoCredentials = config('sikp.demo_credentials');
-
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
             'initialRole' => $request->query('role'),
-            'demoCredentials' => $demoCredentials,
         ]);
     }
 

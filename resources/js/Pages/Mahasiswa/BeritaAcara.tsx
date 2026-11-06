@@ -1,15 +1,12 @@
 import MahasiswaLayout from '@/Layouts/MahasiswaLayout';
 import React, { useRef, useState } from 'react';
 import { 
-  Info, 
-  Download, 
   UploadCloud, 
   CheckCircle2, 
   Trash2, 
   FileText, 
   CheckCircle, 
   Clock, 
-  BookOpen, 
   Printer, 
   ExternalLink, 
   Award,
@@ -99,7 +96,7 @@ export default function BeritaAcara({
   };
 
   return (
-    <div className="flex-1 p-4 md:p-6 max-w-[1280px] mx-auto w-full space-y-6 animate-in fade-in duration-300">
+    <div className="flex-1 p-4 md:p-6 max-w-4xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
       {/* Flash Messages */}
       {flash?.success && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-3.5 rounded-xl flex items-center gap-3 shadow-xs">
@@ -126,111 +123,14 @@ export default function BeritaAcara({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Instructions & Download Templates */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Download Official Templates Card */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col items-center text-center space-y-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
-              <Download className="w-5 h-5" />
-            </div>
+      <div className="w-full space-y-6">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
             <div>
-              <h3 className="text-sm font-bold text-slate-800">Format Resmi Panduan KP</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Template Formulir Berita Acara Ujian (Form KP-5 / Lampiran 10)</p>
-            </div>
-
-            <a 
-              href="/dokumen/lampiran/Lampiran_10_Berita_Acara_Ujian_KP_Form_KP-5.pdf" 
-              download 
-              className="w-full inline-flex items-center justify-center gap-2 bg-[#00288e] hover:bg-blue-800 text-white py-2 px-3 rounded-lg font-semibold text-xs transition-colors shadow-xs"
-              title="Unduh Blanko Berita Acara Ujian Resmi (Form KP-5)"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Unduh Blanko Form KP-5 (PDF)</span>
-            </a>
-
-            <div className="w-full pt-2 border-t border-slate-200/80 space-y-1.5 text-left">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                Formulir Terkait Lainnya:
-              </span>
-              <a
-                href="/dokumen/lampiran/Lampiran_06_Lembar_Persetujuan_Seminar_KP_Form_KP-8.pdf"
-                download
-                className="flex items-center justify-between text-[11px] font-medium text-slate-700 hover:text-blue-700 p-1.5 rounded-md hover:bg-slate-50 border border-transparent hover:border-slate-200 transition"
-              >
-                <span className="truncate">Form KP-8: Persetujuan Seminar</span>
-                <Download className="w-3 h-3 text-slate-400 shrink-0" />
-              </a>
-              <a
-                href="/dokumen/lampiran/Lampiran_07_Penilaian_Pembimbing_Lapangan_Form_KP-6a.pdf"
-                download
-                className="flex items-center justify-between text-[11px] font-medium text-slate-700 hover:text-blue-700 p-1.5 rounded-md hover:bg-slate-50 border border-transparent hover:border-slate-200 transition"
-              >
-                <span className="truncate">Form KP-6a: Nilai Pembimbing Lapangan</span>
-                <Download className="w-3 h-3 text-slate-400 shrink-0" />
-              </a>
-              <Link
-                href="/panduan#lampiran-section"
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00288e] hover:underline pt-1"
-              >
-                <BookOpen className="w-3 h-3" />
-                <span>Katalog 21 Lampiran Lengkap</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Workflow Steps Card */}
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
-            <div className="flex items-center gap-2 mb-3 text-blue-700 font-bold">
-              <Info className="w-5 h-5" />
-              <h2 className="text-sm font-bold">Alur Penerbitan Berita Acara</h2>
-            </div>
-            <ul className="space-y-3">
-              <li className="flex gap-2.5 items-start">
-                <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-md text-xs font-bold mt-0.5 ${
-                  dosenSudahMenilai ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-700'
-                }`}>1</span>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong>Penilaian Dosen Pembimbing:</strong> Dosen menginputkan nilai seminar & bimbingan.
-                </p>
-              </li>
-              <li className="flex gap-2.5 items-start">
-                <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-md text-xs font-bold mt-0.5 ${
-                  dosenSudahMenilai ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                }`}>2</span>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong>Aktivasi & Auto-Generate:</strong> Berita Acara aktif otomatis sesuai template Form KP-5.
-                </p>
-              </li>
-              <li className="flex gap-2.5 items-start">
-                <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-md text-xs font-bold mt-0.5 ${
-                  isSelesai ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                }`}>3</span>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong>Validasi Koordinator KP:</strong> Koordinator KP meninjau dan menyetujui Berita Acara.
-                </p>
-              </li>
-              <li className="flex gap-2.5 items-start">
-                <span className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-md text-xs font-bold mt-0.5 ${
-                  isSelesai ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                }`}>4</span>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong>Cetak Resmi Form KP-5:</strong> Unduh atau cetak berkas sah bertanda tangan digital.
-                </p>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Right Column: Status & Auto-Generated Document */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <div>
-                <h2 className="text-base font-bold text-slate-800">
-                  Status Berita Acara Kerja Praktik
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+              <h2 className="text-base font-bold text-slate-800">
+                Status Berita Acara Kerja Praktik
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
                   Form KP-5 / Lampiran 10 Panduan Kerja Praktik UTM
                 </p>
               </div>
@@ -440,7 +340,6 @@ export default function BeritaAcara({
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

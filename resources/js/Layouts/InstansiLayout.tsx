@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { getAvatarUrl } from '@/utils/avatar';
 import { useTranslation } from '@/hooks/useTranslation';
-import LanguageSwitcher from '@/Components/LanguageSwitcher';
 
 export default function InstansiLayout({ children }: PropsWithChildren) {
     const { url, props } = usePage();
@@ -137,19 +136,6 @@ export default function InstansiLayout({ children }: PropsWithChildren) {
                     </div>
 
                     <div className="flex items-center space-x-2 sm:space-x-3">
-                        {/* Language Switcher */}
-                        <LanguageSwitcher />
-
-                        {/* Panduan Button */}
-                        <Link
-                            href="/panduan"
-                            className="inline-flex items-center gap-1.5 h-8 px-2.5 sm:px-3 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition cursor-pointer shadow-xs"
-                            title={t('nav.panduan', undefined, 'Buku Panduan')}
-                        >
-                            <BookOpen className="w-3.5 h-3.5 text-[#00288e] shrink-0" />
-                            <span className="hidden sm:inline">{t('nav.panduan', undefined, 'Panduan')}</span>
-                        </Link>
-
                         {/* Notifications */}
                         <div className="relative">
                             <button 
@@ -248,17 +234,7 @@ export default function InstansiLayout({ children }: PropsWithChildren) {
                             </span>
                         </Link>
 
-                        {/* Logout Link */}
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition text-xs font-semibold text-slate-600 cursor-pointer shadow-xs"
-                            title={t('nav.keluar', undefined, 'Keluar')}
-                        >
-                            <LogOut className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">{t('nav.keluar', undefined, 'Keluar')}</span>
-                        </Link>
+
                     </div>
                 </header>
 

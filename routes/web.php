@@ -308,11 +308,6 @@ Route::middleware(['auth', 'role:prodi'])->prefix('prodi')->name('prodi.')->grou
 
     Route::get('/mahasiswa', [\App\Http\Controllers\Prodi\ProdiMahasiswaController::class, 'index'])->name('mahasiswa');
     
-    Route::get('/periode', [App\Http\Controllers\Prodi\ProdiPeriodeController::class, 'index'])->name('periode');
-    Route::post('/periode', [App\Http\Controllers\Prodi\ProdiPeriodeController::class, 'store'])->name('periode.store');
-    Route::match(['post', 'put'], '/periode/{id}', [App\Http\Controllers\Prodi\ProdiPeriodeController::class, 'update'])->name('periode.update');
-    Route::delete('/periode/{id}', [App\Http\Controllers\Prodi\ProdiPeriodeController::class, 'destroy'])->name('periode.destroy');
-    
     // Berita Acara
     Route::get('/berita-acara', [App\Http\Controllers\Prodi\ProdiBeritaAcaraController::class, 'index'])->name('berita-acara.index');
     Route::get('/berita-acara/cetak-rekap', [App\Http\Controllers\Prodi\ProdiBeritaAcaraController::class, 'cetakRekap'])->name('berita-acara.cetak-rekap');

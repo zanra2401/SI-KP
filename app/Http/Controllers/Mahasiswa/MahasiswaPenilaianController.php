@@ -57,6 +57,65 @@ class MahasiswaPenilaianController extends Controller
             ];
         })->values();
 
+        $rawCatatan = $nilaiAkhir?->catatan ?? '';
+        $catatanDosen = null;
+        $catatanInstansi = null;
+        $catatanUmum = null;
+
+        if ($rawCatatan) {
+            $lines = preg_split('/\r\n|\r|\n/', $rawCatatan);
+            $catatanUmumList = [];
+
+            foreach ($lines as $line) {
+                $trimmed = trim($line);
+                if ($trimmed === '') {
+                    continue;
+                }
+
+                // Abaikan baris metadata serialisasi JSON huruf
+                if (preg_match('/^\[(Dosen|Instansi)_Huruf\]:/i', $trimmed)) {
+                    continue;
+                }
+
+                // Abaikan jika terdapat sisa fragmen JSON
+                if (
+                    str_starts_with($trimmed, '{') ||
+                    str_starts_with($trimmed, '}') ||
+                    str_starts_with($trimmed, ',"') ||
+                    str_ends_with($trimmed, '"}') ||
+                    str_contains($trimmed, '"bimbingan":') ||
+                    str_contains($trimmed, '"ujian":') ||
+                    str_contains($trimmed, '"total":')
+                ) {
+                    continue;
+                }
+
+                // Tangkap catatan Dosen Pembimbing
+                if (preg_match('/^\[Dosen Pembimbing\]:\s*(.*)$/i', $trimmed, $mD)) {
+                    $val = trim($mD[1]);
+                    if ($val !== '') {
+                        $catatanDosen = $val;
+                    }
+                    continue;
+                }
+
+                // Tangkap catatan Instansi
+                if (preg_match('/^\[Instansi\]:\s*(.*)$/i', $trimmed, $mI)) {
+                    $val = trim($mI[1]);
+                    if ($val !== '') {
+                        $catatanInstansi = $val;
+                    }
+                    continue;
+                }
+
+                $catatanUmumList[] = $trimmed;
+            }
+
+            if (count($catatanUmumList) > 0) {
+                $catatanUmum = implode("\n", $catatanUmumList);
+            }
+        }
+
         $dataRapor = [
             'status_kp' => $pendaftaran->status,
             'dosen_pembimbing' => $dosbing?->name ?? ($pendaftaran->dosenPembimbing ? $pendaftaran->dosenPembimbing->name : '-'),
@@ -71,7 +130,9 @@ class MahasiswaPenilaianController extends Controller
             'nilai_total' => $nilaiAkhir ? $nilaiAkhir->nilai_total : null,
             'nilai_huruf' => $nilaiAkhir ? $nilaiAkhir->nilai_huruf : '-',
             'status_lulus' => $nilaiAkhir ? $nilaiAkhir->status : 'proses',
-            'catatan' => $nilaiAkhir ? $nilaiAkhir->catatan : null,
+            'catatan' => $catatanUmum,
+            'catatan_dosen' => $catatanDosen,
+            'catatan_instansi' => $catatanInstansi,
             
             // Detail
             'rincian_dosen' => $komponenDosen,

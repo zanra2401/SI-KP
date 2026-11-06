@@ -3,12 +3,11 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard, ListOrdered, ClipboardCheck,
     LogOut, Menu, Bell,
-    FileText, BellRing, Building2, BookOpen, X, Calendar, Award,
+    BellRing, Building2, BookOpen, X, Calendar, Award,
     AlertCircle, CheckCircle2, ShieldAlert,
 } from 'lucide-react';
 import { getAvatarUrl } from '@/utils/avatar';
 import { useTranslation } from '@/hooks/useTranslation';
-import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import ImpersonateBanner from '@/Components/ImpersonateBanner';
 
 export default function ProdiLayout({ children }: PropsWithChildren) {
@@ -27,7 +26,6 @@ export default function ProdiLayout({ children }: PropsWithChildren) {
     const navItems = [
         { href: route('prodi.dashboard'), label: t('nav.dashboard', undefined, 'Dashboard'), icon: LayoutDashboard },
         { href: '/prodi/sidang', label: 'Penjadwalan Sidang', icon: Calendar },
-        { href: route('prodi.periode'), label: 'Pendaftaran & Surat', icon: FileText },
         { href: route('prodi.dosen.index'), label: 'Daftar Dosen Pembimbing', icon: ListOrdered },
         { href: '/prodi/mitra-instansi', label: 'Mitra & Instansi', icon: Building2 },
         { href: '/prodi/arsip-nilai', label: 'Arsip Nilai KP', icon: Award },
@@ -143,9 +141,6 @@ export default function ProdiLayout({ children }: PropsWithChildren) {
                     </div>
 
                     <div className="flex items-center space-x-2 sm:space-x-3">
-                        {/* Language Switcher */}
-                        <LanguageSwitcher />
-
                         {/* Super Admin Panel Shortcut */}
                         {(user?.is_superadmin || user?.is_root) && (
                             <Link
@@ -157,16 +152,6 @@ export default function ProdiLayout({ children }: PropsWithChildren) {
                                 <span className="hidden sm:inline">Panel Super Admin</span>
                             </Link>
                         )}
-
-                        {/* Panduan Button */}
-                        <Link
-                            href="/panduan"
-                            className="inline-flex items-center gap-1.5 h-8 px-2.5 sm:px-3 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition cursor-pointer shadow-xs"
-                            title={t('nav.panduan', undefined, 'Buku Panduan')}
-                        >
-                            <BookOpen className="w-3.5 h-3.5 text-[#00288e] shrink-0" />
-                            <span className="hidden sm:inline">{t('nav.panduan', undefined, 'Panduan')}</span>
-                        </Link>
 
                         {/* Notifications */}
                         <div className="relative">
@@ -266,17 +251,7 @@ export default function ProdiLayout({ children }: PropsWithChildren) {
                             </span>
                         </Link>
 
-                        {/* Logout Link */}
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition text-xs font-semibold text-slate-600 cursor-pointer shadow-xs"
-                            title={t('nav.keluar', undefined, 'Keluar')}
-                        >
-                            <LogOut className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">{t('nav.keluar', undefined, 'Keluar')}</span>
-                        </Link>
+
                     </div>
                 </header>
 

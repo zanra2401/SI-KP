@@ -1,14 +1,12 @@
 import MahasiswaLayout from '@/Layouts/MahasiswaLayout';
 import Modal from '@/Components/Modal';
-import InputError from '@/Components/InputError';
-import React, { useState, useRef } from 'react';
-import { useForm, usePage, router } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { router, Link } from '@inertiajs/react';
 import {
     BookOpen, Plus, Pencil, Trash2, CheckCircle2, Clock, AlertCircle,
-    Calendar, ImageIcon, X, MessageSquare, Upload, Search, Download, ExternalLink, FileText, ArrowRight,
+    Calendar, ImageIcon, X, MessageSquare, Search,
 } from 'lucide-react';
 import { PageProps } from '@/types';
-import { Link } from '@inertiajs/react';
 
 /* ──────────────────── Types ──────────────────── */
 
@@ -128,170 +126,53 @@ export default function Logbook({
     /* ══════════════════ RENDER ══════════════════ */
     return (
         <div className="flex-1 p-4 sm:p-6 max-w-[1280px] mx-auto w-full space-y-6">
-            {/* ── Flash messages ── */}
-            {flash?.success && (
-                <div className="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
-                    <div>
-                        <p className="font-bold text-sm">Berhasil!</p>
-                        <p className="text-sm">{flash.success}</p>
-                    </div>
-                </div>
-            )}
-            {flash?.error && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-                    <div>
-                        <p className="font-bold text-sm">Gagal!</p>
-                        <p className="text-sm">{flash.error}</p>
-                    </div>
-                </div>
-            )}
-
             {/* ── Header ── */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex-1">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 mb-2">
-                        <BookOpen className="w-3.5 h-3.5" />
-                        Tahap 6: Logbook Harian
-                    </span>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Logbook Kegiatan Harian</h1>
-                    <p className="text-sm text-slate-500 mt-1">
-                        Catat aktivitas harian, jam kerja, dan dokumentasi kegiatan Kerja Praktik.
-                    </p>
-                    
-                    <div className="flex flex-col sm:flex-row gap-4 mt-4 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
-                        <div className="flex-1">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Pembimbing Lapangan</span>
-                            <span className="text-sm font-bold text-slate-900">
-                                {pembimbingLapangan?.nama ?? 'Belum ditentukan'}
-                            </span>
-                        </div>
-                        <div className="flex-1">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Instansi Mitra</span>
-                            <span className="text-sm font-bold text-slate-900">
-                                {instansi?.nama ?? pembimbingLapangan?.instansi?.nama ?? 'Belum ditentukan'}
-                            </span>
-                        </div>
-                        <div className="flex-1">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Dosen Pembimbing</span>
-                            <span className="text-sm font-bold text-slate-900">
-                                {dosenPembimbing?.name ?? 'Belum ditentukan'}
-                            </span>
-                        </div>
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 mb-2">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            Tahap 6: Logbook Harian
+                        </span>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Logbook Kegiatan Harian</h1>
+                        <p className="text-sm text-slate-500 mt-1">
+                            Catat aktivitas harian, jam kerja, dan dokumentasi kegiatan Kerja Praktik.
+                        </p>
                     </div>
+
+                    {hasPendaftaran && (
+                        <div className="shrink-0 self-start sm:self-center">
+                            <Link
+                                href="/mahasiswa/logbook/create"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm transition shadow-xs cursor-pointer"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span>Tambah Kegiatan</span>
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
-                {hasPendaftaran && (
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href="/mahasiswa/logbook/create"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm transition shadow-xs cursor-pointer"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>Tambah Kegiatan</span>
-                        </Link>
+                {/* Info Card Pembimbing & Instansi */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Pembimbing Lapangan</span>
+                        <span className="text-sm font-bold text-slate-900 mt-0.5 block truncate">
+                            {pembimbingLapangan?.nama ?? 'Belum ditentukan'}
+                        </span>
                     </div>
-                )}
-            </div>
-
-            {/* ── Status Progres & Lanjut Tahap 7 Banner ── */}
-            {logbooks.length > 0 && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                            <CheckCircle2 className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-bold text-slate-900">
-                                Logbook Kegiatan Terisi ({logbooks.length} Catatan) • Siap Lanjut ke Tahap 7
-                            </p>
-                            <p className="text-xs text-slate-600 mt-0.5">
-                                Syarat tahapan logbook harian telah terpenuhi. Anda dapat melanjutkan ke pengunggahan Berita Acara dan Laporan Akhir KP.
-                            </p>
-                        </div>
+                    <div>
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Instansi Mitra</span>
+                        <span className="text-sm font-bold text-slate-900 mt-0.5 block truncate">
+                            {instansi?.nama ?? pembimbingLapangan?.instansi?.nama ?? 'Belum ditentukan'}
+                        </span>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                        <Link
-                            href="/mahasiswa/dokumen-akhir"
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs transition shadow-xs cursor-pointer"
-                        >
-                            <span>Unggah Laporan Akhir</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                        <Link
-                            href="/mahasiswa/berita-acara"
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 font-semibold text-xs transition shadow-xs cursor-pointer"
-                        >
-                            <span>Berita Acara</span>
-                            <ExternalLink className="w-3.5 h-3.5" />
-                        </Link>
+                    <div>
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">Dosen Pembimbing</span>
+                        <span className="text-sm font-bold text-slate-900 mt-0.5 block truncate">
+                            {dosenPembimbing?.name ?? 'Belum ditentukan'}
+                        </span>
                     </div>
-                </div>
-            )}
-
-            {/* ── Berkas Resmi Absensi & Bimbingan ── */}
-            <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 text-[#00288e] flex items-center justify-center shrink-0">
-                            <FileText className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <h3 className="text-xs sm:text-sm font-bold text-slate-900">Format Resmi Absensi & Lembar Konsultasi Bimbingan</h3>
-                            <p className="text-[11px] text-slate-500">
-                                Unduh format lampiran resmi untuk dicetak dan dimintakan tanda tangan/paraf saat pelaksanaan Kerja Praktik.
-                            </p>
-                        </div>
-                    </div>
-                    <Link
-                        href="/panduan"
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#00288e] hover:underline shrink-0"
-                    >
-                        <span>Katalog Panduan & Formulir</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                    </Link>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3">
-                    <a
-                        href="/dokumen/lampiran/Lampiran_03_Format_Absensi_Harian_Logbook.pdf"
-                        download
-                        className="flex items-start gap-2.5 p-3 rounded-lg border border-blue-200 bg-blue-50/50 hover:bg-blue-100/60 transition group cursor-pointer"
-                    >
-                        <Download className="w-4 h-4 text-[#00288e] shrink-0 mt-0.5 group-hover:translate-y-0.5 transition-transform" />
-                        <div className="min-w-0">
-                            <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">Lampiran 03</span>
-                            <p className="text-xs font-semibold text-slate-900 mt-1 truncate">Format Absensi Harian / Logbook</p>
-                            <p className="text-[11px] text-slate-500">Presensi kehadiran jam datang, pulang & paraf</p>
-                        </div>
-                    </a>
-
-                    <a
-                        href="/dokumen/lampiran/Lampiran_04_Lembar_Konsultasi_Dosen_Pembimbing_Form_KP-3a.pdf"
-                        download
-                        className="flex items-start gap-2.5 p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100/80 transition group cursor-pointer"
-                    >
-                        <Download className="w-4 h-4 text-slate-600 shrink-0 mt-0.5 group-hover:translate-y-0.5 transition-transform" />
-                        <div className="min-w-0">
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Form KP-3a</span>
-                            <p className="text-xs font-semibold text-slate-900 mt-1 truncate">Konsultasi Dosen Pembimbing</p>
-                            <p className="text-[11px] text-slate-500">Catatan arahan & tanda tangan dosen pembimbing</p>
-                        </div>
-                    </a>
-
-                    <a
-                        href="/dokumen/lampiran/Lampiran_05_Lembar_Konsultasi_Pembimbing_Lapangan_Form_KP-3b.pdf"
-                        download
-                        className="flex items-start gap-2.5 p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100/80 transition group cursor-pointer"
-                    >
-                        <Download className="w-4 h-4 text-slate-600 shrink-0 mt-0.5 group-hover:translate-y-0.5 transition-transform" />
-                        <div className="min-w-0">
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Form KP-3b</span>
-                            <p className="text-xs font-semibold text-slate-900 mt-1 truncate">Konsultasi Pembimbing Lapangan</p>
-                            <p className="text-[11px] text-slate-500">Catatan tugas & tanda tangan pembimbing industri</p>
-                        </div>
-                    </a>
                 </div>
             </div>
 

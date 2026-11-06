@@ -1,7 +1,7 @@
 import MahasiswaLayout from '@/Layouts/MahasiswaLayout';
 import React, { useRef } from 'react';
-import { useForm, usePage, Link } from '@inertiajs/react';
-import { AlertCircle, UploadCloud, Send as SendIcon, CheckCircle2, Info as InfoIcon, User, GraduationCap, RefreshCw, Download, BookOpen, Layers, FileCheck2, FileUp, FileText } from 'lucide-react';
+import { useForm, usePage } from '@inertiajs/react';
+import { AlertCircle, UploadCloud, Send as SendIcon, CheckCircle2, Info as InfoIcon, GraduationCap, RefreshCw, Download, FileCheck2 } from 'lucide-react';
 
 interface Feedback {
     id: number;
@@ -339,57 +339,7 @@ export default function Proposal({ proposal, dosenPembimbing, feedbacks, hasPend
                             <Download className="w-3.5 h-3.5" />
                             <span>Template Proposal Lengkap (PDF)</span>
                         </a>
-
-                        <div className="pt-2 border-t border-slate-100 space-y-1 text-left">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                                Komponen Lampiran Proposal:
-                            </span>
-                            <a
-                                href="/dokumen/lampiran/Lampiran_13_Sampul_Proposal_KP.pdf"
-                                download
-                                className="flex items-center justify-between text-[11px] font-medium text-slate-700 hover:text-blue-700 p-1.5 rounded-md hover:bg-slate-50 transition"
-                            >
-                                <span className="truncate">Lampiran 13: Sampul Proposal</span>
-                                <Download className="w-3 h-3 text-slate-400 shrink-0" />
-                            </a>
-                            <a
-                                href="/dokumen/lampiran/Lampiran_14_Pengesahan_Proposal_KP.pdf"
-                                download
-                                className="flex items-center justify-between text-[11px] font-medium text-slate-700 hover:text-blue-700 p-1.5 rounded-md hover:bg-slate-50 transition"
-                            >
-                                <span className="truncate">Lampiran 14: Lembar Pengesahan</span>
-                                <Download className="w-3 h-3 text-slate-400 shrink-0" />
-                            </a>
-                            <a
-                                href="/dokumen/lampiran/Lampiran_15_Rencana_Jadwal_Pelaksanaan_KP.pdf"
-                                download
-                                className="flex items-center justify-between text-[11px] font-medium text-slate-700 hover:text-blue-700 p-1.5 rounded-md hover:bg-slate-50 transition"
-                            >
-                                <span className="truncate">Lampiran 15: Jadwal Gantt Chart</span>
-                                <Download className="w-3 h-3 text-slate-400 shrink-0" />
-                            </a>
-                            <Link
-                                href="/panduan#lampiran-section"
-                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00288e] hover:underline pt-1.5"
-                            >
-                                <BookOpen className="w-3 h-3" />
-                                <span>Lihat Semua 21 Lampiran di Panduan</span>
-                            </Link>
-                        </div>
                     </section>
-
-                    {dosenPembimbing && (
-                        <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs shrink-0">
-                                {dosenPembimbing.initials}
-                            </div>
-                            <div>
-                                <span className="text-[10px] font-semibold text-blue-700 uppercase tracking-wider block">Dosen Pembimbing</span>
-                                <p className="text-xs font-bold text-slate-900">{dosenPembimbing.name}</p>
-                                <p className="text-[11px] text-slate-500">NIP. {dosenPembimbing.nip}</p>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 

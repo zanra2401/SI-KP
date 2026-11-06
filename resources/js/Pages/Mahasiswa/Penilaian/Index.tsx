@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import MahasiswaLayout from '@/Layouts/MahasiswaLayout';
 import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { Award, Printer, CheckCircle, FileText, AlertCircle } from 'lucide-react';
+import { Award, Printer, CheckCircle, FileText, AlertCircle, Building, MessageSquareQuote } from 'lucide-react';
 import PageHeader from '@/Components/PageHeader';
 import ModernTable, { ModernTableHeader, ModernTableTh, ModernTableBody, ModernTableTd } from '@/Components/ModernTable';
 
@@ -24,6 +24,8 @@ interface RaporData {
     nilai_huruf: string;
     status_lulus: string;
     catatan: string | null;
+    catatan_dosen?: string | null;
+    catatan_instansi?: string | null;
     rincian_dosen: RincianNilai[];
     rincian_instansi: RincianNilai[];
 }
@@ -35,6 +37,60 @@ interface PenilaianProps extends PageProps {
 }
 
 export default function Index({ hasData, message, rapor }: PenilaianProps) {
+    const parsedNotes = useMemo(() => {
+        let dosen = rapor?.catatan_dosen || null;
+        let instansi = rapor?.catatan_instansi || null;
+        let umumList: string[] = [];
+
+        // Parse string catatan baris per baris secara ketat
+        const raw = rapor?.catatan || '';
+        if (raw) {
+            const lines = raw.split(/\r?\n/);
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+
+                // Abaikan baris metadata serialisasi JSON huruf
+                if (/^\[(Dosen|Instansi)_Huruf\]:/i.test(trimmed)) continue;
+
+                // Abaikan jika terdapat sisa pecahan string JSON
+                if (
+                    trimmed.startsWith('{') ||
+                    trimmed.startsWith('}') ||
+                    trimmed.startsWith(',"') ||
+                    trimmed.endsWith('"}') ||
+                    trimmed.includes('"bimbingan":') ||
+                    trimmed.includes('"ujian":') ||
+                    trimmed.includes('"total":')
+                ) {
+                    continue;
+                }
+
+                if (/^\[Dosen Pembimbing\]:\s*/i.test(trimmed)) {
+                    if (!dosen) {
+                        const val = trimmed.replace(/^\[Dosen Pembimbing\]:\s*/i, '').trim();
+                        if (val) dosen = val;
+                    }
+                    continue;
+                }
+
+                if (/^\[Instansi\]:\s*/i.test(trimmed)) {
+                    if (!instansi) {
+                        const val = trimmed.replace(/^\[Instansi\]:\s*/i, '').trim();
+                        if (val) instansi = val;
+                    }
+                    continue;
+                }
+
+                umumList.push(trimmed);
+            }
+        }
+
+        const umum = umumList.length > 0 ? umumList.join('\n') : null;
+        const hasAny = Boolean(dosen || instansi || umum);
+        return { dosen, instansi, umum, hasAny };
+    }, [rapor]);
+
     if (!hasData || !rapor) {
         return (
             <div className="flex-1 p-6 max-w-[1200px] mx-auto w-full space-y-6">
@@ -117,21 +173,21 @@ export default function Index({ hasData, message, rapor }: PenilaianProps) {
                 <div className="p-6">
                     {rapor.rincian_dosen.length === 0 && rapor.rincian_instansi.length === 0 ? (
                         <div className="text-center py-12">
-                            <FileText className="w-16 h-16 text-outline mx-auto mb-4" />
-                            <h3 className="text-title-md font-bold text-on-surface">Penilaian Masih Diproses</h3>
-                            <p className="text-secondary mt-2">Dosen atau Instansi belum melengkapi komponen nilai Anda.</p>
+                            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                            <h3 className="text-base font-bold text-slate-900">Penilaian Masih Diproses</h3>
+                            <p className="text-xs text-slate-500 mt-2">Dosen atau Instansi belum melengkapi komponen nilai Anda.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 space-y-6">
                                 {/* Dosen Pembimbing Section */}
                                 <div>
-                                    <h3 className="text-title-md font-bold mb-4 flex items-center gap-2">
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                    <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-emerald-600" />
                                         Nilai Dosen Pembimbing (30%)
                                     </h3>
                                     {rapor.rincian_dosen.length > 0 ? (
-                                        <div className="overflow-x-auto border border-outline-variant rounded-xl">
+                                        <div className="overflow-x-auto border border-slate-200 rounded-xl">
                                             <ModernTable>
                                                 <ModernTableHeader>
                                                     <tr>
@@ -146,7 +202,7 @@ export default function Index({ hasData, message, rapor }: PenilaianProps) {
                                                             <ModernTableTd>{n.nilai}</ModernTableTd>
                                                         </tr>
                                                     ))}
-                                                    <tr className="bg-surface-container-lowest">
+                                                    <tr className="bg-slate-50 font-semibold">
                                                         <ModernTableTd>Rata-rata/Agregat Dosen</ModernTableTd>
                                                         <ModernTableTd>{rapor.agregat_dosen}</ModernTableTd>
                                                     </tr>
@@ -154,18 +210,18 @@ export default function Index({ hasData, message, rapor }: PenilaianProps) {
                                             </ModernTable>
                                         </div>
                                     ) : (
-                                        <p className="text-secondary italic">Belum ada rincian nilai dosen.</p>
+                                        <p className="text-xs text-slate-500 italic">Belum ada rincian nilai dosen.</p>
                                     )}
                                 </div>
 
                                 {/* Instansi Section */}
                                 <div>
-                                    <h3 className="text-title-md font-bold mb-4 flex items-center gap-2">
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                    <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-emerald-600" />
                                         Nilai Instansi (30%)
                                     </h3>
                                     {rapor.rincian_instansi.length > 0 ? (
-                                        <div className="overflow-x-auto border border-outline-variant rounded-xl">
+                                        <div className="overflow-x-auto border border-slate-200 rounded-xl">
                                             <ModernTable>
                                                 <ModernTableHeader>
                                                     <tr>
@@ -180,7 +236,7 @@ export default function Index({ hasData, message, rapor }: PenilaianProps) {
                                                             <ModernTableTd>{n.nilai}</ModernTableTd>
                                                         </tr>
                                                     ))}
-                                                    <tr className="bg-surface-container-lowest">
+                                                    <tr className="bg-slate-50 font-semibold">
                                                         <ModernTableTd>Rata-rata/Agregat Instansi</ModernTableTd>
                                                         <ModernTableTd>{rapor.agregat_instansi}</ModernTableTd>
                                                     </tr>
@@ -188,32 +244,104 @@ export default function Index({ hasData, message, rapor }: PenilaianProps) {
                                             </ModernTable>
                                         </div>
                                     ) : (
-                                        <p className="text-secondary italic">Belum ada rincian nilai instansi.</p>
+                                        <p className="text-xs text-slate-500 italic">Belum ada rincian nilai instansi.</p>
                                     )}
                                 </div>
                             </div>
                             
                             <div className="space-y-6">
-                                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
+                                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center shadow-xs">
                                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Nilai Akhir</h3>
-                                    <div className="text-4xl text-[#00288e] font-bold mb-2">{rapor.nilai_total}</div>
-                                    <div className="inline-block bg-[#00288e] text-white px-3 py-1 rounded-md text-xs font-bold mb-3">
+                                    <div className="text-4xl text-[#00288e] font-extrabold mb-2">{rapor.nilai_total !== null ? rapor.nilai_total : '-'}</div>
+                                    <div className="inline-block bg-[#00288e] text-white px-3 py-1 rounded-md text-xs font-bold mb-3 shadow-2xs">
                                         Grade {rapor.nilai_huruf}
                                     </div>
                                     <div className="text-xs font-medium text-slate-500">
-                                        Status: <span className={`font-bold ${rapor.status_lulus === 'lulus' ? 'text-green-600' : 'text-red-600'}`}>{rapor.status_lulus.toUpperCase()}</span>
+                                        Status: <span className={`font-bold ${rapor.status_lulus === 'lulus' ? 'text-emerald-600' : 'text-rose-600'}`}>{rapor.status_lulus.toUpperCase()}</span>
                                     </div>
                                 </div>
                                 
-                                {rapor.catatan && (
-                                    <div className="bg-amber-50 p-5 rounded-xl border border-amber-200">
-                                        <h3 className="text-xs font-bold text-amber-800 mb-1.5 flex items-center gap-1.5">
-                                            <AlertCircle className="w-4 h-4" />
-                                            Catatan Evaluasi
-                                        </h3>
-                                        <p className="text-xs text-amber-900 whitespace-pre-wrap leading-relaxed">{rapor.catatan}</p>
+                                {/* Card Catatan Evaluasi */}
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+                                    <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-[#00288e] shrink-0">
+                                                <MessageSquareQuote className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Catatan Evaluasi</h3>
+                                                <p className="text-[10px] text-slate-500">Masukan & umpan balik pembimbing</p>
+                                            </div>
+                                        </div>
+                                        {parsedNotes.hasAny && (
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#00288e] border border-blue-100">
+                                                Tersedia
+                                            </span>
+                                        )}
                                     </div>
-                                )}
+
+                                    <div className="p-4 sm:p-5 space-y-3.5">
+                                        {parsedNotes.hasAny ? (
+                                            <>
+                                                {parsedNotes.dosen && (
+                                                    <div className="p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-xl space-y-1.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                                <Award className="w-3.5 h-3.5" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Dosen Pembimbing</span>
+                                                                <p className="text-xs font-semibold text-slate-800 truncate">{rapor.dosen_pembimbing}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-white/90 p-2.5 rounded-lg border border-emerald-100 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                                            “{parsedNotes.dosen}”
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {parsedNotes.instansi && (
+                                                    <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-xl space-y-1.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                                <Building className="w-3.5 h-3.5" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-800 block">Pembimbing Lapangan</span>
+                                                                <p className="text-xs font-semibold text-slate-800 truncate">{rapor.instansi}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-white/90 p-2.5 rounded-lg border border-blue-100 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                                            “{parsedNotes.instansi}”
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {parsedNotes.umum && (
+                                                    <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-md bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                                <FileText className="w-3.5 h-3.5" />
+                                                            </div>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700">Catatan Nilai Akhir</span>
+                                                        </div>
+                                                        <div className="bg-white p-2.5 rounded-lg border border-slate-200 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                                            {parsedNotes.umum}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <div className="text-center py-4 px-2">
+                                                <MessageSquareQuote className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                                <p className="text-xs font-bold text-slate-700">Belum Ada Catatan Evaluasi Khusus</p>
+                                                <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                                                    Dosen pembimbing dan pembimbing lapangan tidak menyematkan catatan tambahan pada penilaian akhir ini.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
