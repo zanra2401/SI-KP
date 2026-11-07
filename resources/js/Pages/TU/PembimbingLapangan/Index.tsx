@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import TULayout from '@/Layouts/TULayout';
 import {
     Briefcase,
@@ -22,6 +22,9 @@ import {
     ExternalLink,
     ChevronLeft,
     ChevronRight,
+    Plus,
+    Pencil,
+    Trash2,
 } from 'lucide-react';
 
 interface PembimbingLapanganItem {
@@ -69,6 +72,11 @@ interface Props {
         from: number;
         to: number;
     };
+    instansis?: Array<{
+        id: number;
+        nama: string;
+        alamat?: string;
+    }>;
     stats: {
         total: number;
         aktif: number;
@@ -82,12 +90,11 @@ interface Props {
     };
 }
 
-export default function Index({ pembimbingLapangans, stats, filters }: Props) {
+export default function Index({ pembimbingLapangans, instansis = [], stats, filters }: Props) {
     const { flash } = usePage().props as any;
 
     const [search, setSearch] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
-    const [selectedPl, setSelectedPl] = useState<PembimbingLapanganItem | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
 
     // Modals
@@ -97,6 +104,87 @@ export default function Index({ pembimbingLapangans, stats, filters }: Props) {
         pl: PembimbingLapanganItem;
         targetStatus: 'aktif' | 'nonaktif';
     } | null>(null);
+
+    // CRUD Modals & States
+    const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [createCustomInstansi, setCreateCustomInstansi] = useState(false);
+    const [editModalItem, setEditModalItem] = useState<PembimbingLapanganItem | null>(null);
+    const [editCustomInstansi, setEditCustomInstansi] = useState(false);
+    const [deleteConfirmItem, setDeleteConfirmItem] = useState<PembimbingLapanganItem | null>(null);
+
+    const createForm = useForm({
+        name: '',
+        email: '',
+        no_telepon: '',
+        instansi_id: '',
+        nama_instansi: '',
+        password: '',
+    });
+
+    const editForm = useForm({
+        name: '',
+        email: '',
+        no_telepon: '',
+        instansi_id: '',
+        nama_instansi: '',
+        password: '',
+    });
+
+    const openCreateModal = () => {
+        createForm.reset();
+        createForm.clearErrors();
+        setCreateCustomInstansi(false);
+        setCreateModalOpen(true);
+    };
+
+    const handleCreateSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        createForm.post('/tu/pembimbing-lapangan', {
+            preserveScroll: true,
+            onSuccess: () => {
+                setCreateModalOpen(false);
+                createForm.reset();
+            },
+        });
+    };
+
+    const openEditModal = (pl: PembimbingLapanganItem) => {
+        setEditModalItem(pl);
+        setEditCustomInstansi(false);
+        editForm.clearErrors();
+        editForm.setData({
+            name: pl.user?.name || pl.nama,
+            email: pl.user?.email || '',
+            no_telepon: pl.user?.no_telepon || '',
+            instansi_id: pl.instansi_id ? String(pl.instansi_id) : '',
+            nama_instansi: '',
+            password: '',
+        });
+    };
+
+    const handleEditSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        if (!editModalItem) return;
+        editForm.put(`/tu/pembimbing-lapangan/${editModalItem.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditModalItem(null);
+                editForm.reset();
+            },
+        });
+    };
+
+    const handleDelete = () => {
+        if (!deleteConfirmItem) return;
+        setActionLoading(true);
+        router.delete(`/tu/pembimbing-lapangan/${deleteConfirmItem.id}`, {
+            preserveScroll: true,
+            onFinish: () => {
+                setActionLoading(false);
+                setDeleteConfirmItem(null);
+            },
+        });
+    };
 
     const handleSearchSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -174,8 +262,18 @@ export default function Index({ pembimbingLapangans, stats, filters }: Props) {
                             <span>Kelola Akun Pembimbing Lapangan</span>
                         </h1>
                         <p className="text-sm text-slate-500 mt-1">
-                            Aktivasi akun, reset password, dan pemantauan pembimbing lapangan mitra instansi kerja praktik.
+                            Aktivasi akun, tambah pembimbing baru, reset password, dan kelola data instansi mitra kerja praktik.
                         </p>
+                    </div>
+                    <div>
+                        <button
+                            type="button"
+                            onClick={openCreateModal}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white rounded-xl font-medium text-sm shadow-xs transition-colors cursor-pointer"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Tambah Akun</span>
+                        </button>
                     </div>
                 </div>
 
@@ -401,7 +499,7 @@ export default function Index({ pembimbingLapangans, stats, filters }: Props) {
 
                                                 {/* Actions */}
                                                 <td className="py-4 px-4 text-center">
-                                                    <div className="flex items-center justify-center gap-1.5">
+                                                    <div className="flex items-center justify-center gap-1">
                                                         <button
                                                             type="button"
                                                             onClick={() => setDetailModal(pl)}
@@ -409,6 +507,15 @@ export default function Index({ pembimbingLapangans, stats, filters }: Props) {
                                                             title="Lihat Detail"
                                                         >
                                                             <Eye className="w-4 h-4" />
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openEditModal(pl)}
+                                                            className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
+                                                            title="Edit Data"
+                                                        >
+                                                            <Pencil className="w-4 h-4" />
                                                         </button>
 
                                                         {user && (
@@ -453,6 +560,15 @@ export default function Index({ pembimbingLapangans, stats, filters }: Props) {
                                                                 </button>
                                                             </>
                                                         )}
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDeleteConfirmItem(pl)}
+                                                            className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
+                                                            title="Hapus Akun"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -674,6 +790,367 @@ export default function Index({ pembimbingLapangans, stats, filters }: Props) {
                                 className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-xs"
                             >
                                 {actionLoading ? 'Mengirim...' : 'Reset & Kirim Email'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* CREATE MODAL */}
+            {createModalOpen && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 border border-slate-200 shadow-xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
+                                <Plus className="w-5 h-5 text-teal-600" />
+                                <span>Tambah Akun Pembimbing Lapangan</span>
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setCreateModalOpen(false)}
+                                className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1 cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateSubmit} className="space-y-4">
+                            {/* Nama Lengkap */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    Nama Lengkap <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={createForm.data.name}
+                                    onChange={(e) => createForm.setData('name', e.target.value)}
+                                    placeholder="Contoh: Budi Santoso, S.Kom."
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                />
+                                {createForm.errors.name && (
+                                    <p className="text-xs text-rose-600 mt-1">{createForm.errors.name}</p>
+                                )}
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    Email (Login) <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={createForm.data.email}
+                                    onChange={(e) => createForm.setData('email', e.target.value)}
+                                    placeholder="budi@perusahaan.co.id"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                />
+                                {createForm.errors.email && (
+                                    <p className="text-xs text-rose-600 mt-1">{createForm.errors.email}</p>
+                                )}
+                            </div>
+
+                            {/* Instansi / Perusahaan */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                                        Nama Instansi / Perusahaan
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setCreateCustomInstansi(!createCustomInstansi);
+                                            createForm.setData('instansi_id', '');
+                                            createForm.setData('nama_instansi', '');
+                                        }}
+                                        className="text-xs font-medium text-teal-600 hover:text-teal-700 underline cursor-pointer"
+                                    >
+                                        {createCustomInstansi ? 'Pilih dari daftar instansi' : '+ Tulis nama instansi baru'}
+                                    </button>
+                                </div>
+
+                                {createCustomInstansi ? (
+                                    <input
+                                        type="text"
+                                        value={createForm.data.nama_instansi}
+                                        onChange={(e) => createForm.setData('nama_instansi', e.target.value)}
+                                        placeholder="Ketik nama perusahaan / instansi baru"
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                    />
+                                ) : (
+                                    <select
+                                        value={createForm.data.instansi_id}
+                                        onChange={(e) => createForm.setData('instansi_id', e.target.value)}
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all bg-white"
+                                    >
+                                        <option value="">-- Pilih Instansi Terdaftar --</option>
+                                        {instansis.map((inst) => (
+                                            <option key={inst.id} value={inst.id}>
+                                                {inst.nama}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                                {createForm.errors.instansi_id && (
+                                    <p className="text-xs text-rose-600 mt-1">{createForm.errors.instansi_id}</p>
+                                )}
+                                {createForm.errors.nama_instansi && (
+                                    <p className="text-xs text-rose-600 mt-1">{createForm.errors.nama_instansi}</p>
+                                )}
+                            </div>
+
+                            {/* No Telepon */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    No. Telepon / WhatsApp <span className="text-slate-400 font-normal lowercase">(opsional)</span>
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={createForm.data.no_telepon}
+                                    onChange={(e) => createForm.setData('no_telepon', e.target.value)}
+                                    placeholder="Contoh: 081234567890"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                />
+                                {createForm.errors.no_telepon && (
+                                    <p className="text-xs text-rose-600 mt-1">{createForm.errors.no_telepon}</p>
+                                )}
+                            </div>
+
+                            {/* Password */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    Password <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={createForm.data.password}
+                                    onChange={(e) => createForm.setData('password', e.target.value)}
+                                    placeholder="Minimal 6 karakter"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                />
+                                {createForm.errors.password && (
+                                    <p className="text-xs text-rose-600 mt-1">{createForm.errors.password}</p>
+                                )}
+                            </div>
+
+                            <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setCreateModalOpen(false)}
+                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={createForm.processing}
+                                    className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+                                >
+                                    {createForm.processing ? 'Menyimpan...' : 'Simpan Akun'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT MODAL */}
+            {editModalItem && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 border border-slate-200 shadow-xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
+                                <Pencil className="w-5 h-5 text-amber-600" />
+                                <span>Edit Data Pembimbing Lapangan</span>
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setEditModalItem(null)}
+                                className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1 cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleEditSubmit} className="space-y-4">
+                            {/* Nama Lengkap */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    Nama Lengkap <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={editForm.data.name}
+                                    onChange={(e) => editForm.setData('name', e.target.value)}
+                                    placeholder="Contoh: Budi Santoso, S.Kom."
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                />
+                                {editForm.errors.name && (
+                                    <p className="text-xs text-rose-600 mt-1">{editForm.errors.name}</p>
+                                )}
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    Email (Login) <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={editForm.data.email}
+                                    onChange={(e) => editForm.setData('email', e.target.value)}
+                                    placeholder="budi@perusahaan.co.id"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                />
+                                {editForm.errors.email && (
+                                    <p className="text-xs text-rose-600 mt-1">{editForm.errors.email}</p>
+                                )}
+                            </div>
+
+                            {/* Instansi / Perusahaan */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                                        Nama Instansi / Perusahaan
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditCustomInstansi(!editCustomInstansi);
+                                            editForm.setData('nama_instansi', '');
+                                        }}
+                                        className="text-xs font-medium text-teal-600 hover:text-teal-700 underline cursor-pointer"
+                                    >
+                                        {editCustomInstansi ? 'Pilih dari daftar instansi' : '+ Tulis nama instansi baru'}
+                                    </button>
+                                </div>
+
+                                {editCustomInstansi ? (
+                                    <input
+                                        type="text"
+                                        value={editForm.data.nama_instansi}
+                                        onChange={(e) => editForm.setData('nama_instansi', e.target.value)}
+                                        placeholder="Ketik nama perusahaan / instansi baru"
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                    />
+                                ) : (
+                                    <select
+                                        value={editForm.data.instansi_id}
+                                        onChange={(e) => editForm.setData('instansi_id', e.target.value)}
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all bg-white"
+                                    >
+                                        <option value="">-- Pilih Instansi Terdaftar --</option>
+                                        {instansis.map((inst) => (
+                                            <option key={inst.id} value={inst.id}>
+                                                {inst.nama}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                                {editForm.errors.instansi_id && (
+                                    <p className="text-xs text-rose-600 mt-1">{editForm.errors.instansi_id}</p>
+                                )}
+                                {editForm.errors.nama_instansi && (
+                                    <p className="text-xs text-rose-600 mt-1">{editForm.errors.nama_instansi}</p>
+                                )}
+                            </div>
+
+                            {/* No Telepon */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    No. Telepon / WhatsApp <span className="text-slate-400 font-normal lowercase">(opsional)</span>
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={editForm.data.no_telepon}
+                                    onChange={(e) => editForm.setData('no_telepon', e.target.value)}
+                                    placeholder="Contoh: 081234567890"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                />
+                                {editForm.errors.no_telepon && (
+                                    <p className="text-xs text-rose-600 mt-1">{editForm.errors.no_telepon}</p>
+                                )}
+                            </div>
+
+                            {/* Password Baru */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                                    Password Baru <span className="text-slate-400 font-normal lowercase">(opsional)</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    value={editForm.data.password}
+                                    onChange={(e) => editForm.setData('password', e.target.value)}
+                                    placeholder="Biarkan kosong jika tidak ingin mengubah password"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                                />
+                                <p className="text-[11px] text-slate-400 mt-1">Kosongkan kolom ini jika password tidak ingin diganti.</p>
+                                {editForm.errors.password && (
+                                    <p className="text-xs text-rose-600 mt-1">{editForm.errors.password}</p>
+                                )}
+                            </div>
+
+                            <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditModalItem(null)}
+                                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={editForm.processing}
+                                    className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+                                >
+                                    {editForm.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* DELETE CONFIRMATION MODAL */}
+            {deleteConfirmItem && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 shadow-xl">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 rounded-full bg-rose-100 text-rose-600">
+                                <Trash2 className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-900 text-base">Hapus Akun Pembimbing Lapangan?</h3>
+                                <p className="text-xs text-slate-500">
+                                    {deleteConfirmItem.nama} {deleteConfirmItem.user?.email && `(${deleteConfirmItem.user.email})`}
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            Apakah Anda yakin ingin menghapus akun ini? Data pembimbing lapangan beserta hak akses login akan dihapus dari sistem. Tindakan ini tidak dapat dibatalkan.
+                        </p>
+
+                        <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                disabled={actionLoading}
+                                onClick={() => setDeleteConfirmItem(null)}
+                                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                disabled={actionLoading}
+                                onClick={handleDelete}
+                                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+                            >
+                                {actionLoading ? 'Menghapus...' : 'Ya, Hapus Akun'}
                             </button>
                         </div>
                     </div>

@@ -209,6 +209,8 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     Route::get('/logbook', [App\Http\Controllers\Dosen\DosenLogbookController::class, 'index'])->name('logbook');
     Route::get('/logbook/{id}/review', [App\Http\Controllers\Dosen\DosenLogbookController::class, 'review'])->name('logbook.review');
     Route::put('/logbook/{id}', [App\Http\Controllers\Dosen\DosenLogbookController::class, 'update'])->name('logbook.update');
+    Route::get('/laporan-akhir', [App\Http\Controllers\Dosen\DosenLaporanAkhirController::class, 'index'])->name('laporan-akhir.index');
+    Route::get('/laporan-akhir/{id}/download', [App\Http\Controllers\Dosen\DosenLaporanAkhirController::class, 'download'])->name('laporan-akhir.download');
     Route::get('/penilaian', [App\Http\Controllers\Dosen\DosenPenilaianController::class, 'index'])->name('penilaian.index');
     Route::get('/penilaian/{pendaftaran}/nilai', [App\Http\Controllers\Dosen\DosenPenilaianController::class, 'create'])->name('penilaian.create');
     Route::get('/penilaian/{pendaftaran}/cetak', [App\Http\Controllers\Dosen\DosenPenilaianController::class, 'cetak'])->name('penilaian.cetak');
@@ -250,6 +252,9 @@ Route::middleware(['auth', 'role:tu'])->prefix('tu')->name('tu.')->group(functio
 
     // Pembimbing Lapangan (Kelola Akun, Aktivasi, Reset Password, Kirim Ulang)
     Route::get('/pembimbing-lapangan', [\App\Http\Controllers\TU\TUPembimbingLapanganController::class, 'index'])->name('pembimbing-lapangan.index');
+    Route::post('/pembimbing-lapangan', [\App\Http\Controllers\TU\TUPembimbingLapanganController::class, 'store'])->name('pembimbing-lapangan.store');
+    Route::put('/pembimbing-lapangan/{id}', [\App\Http\Controllers\TU\TUPembimbingLapanganController::class, 'update'])->name('pembimbing-lapangan.update');
+    Route::delete('/pembimbing-lapangan/{id}', [\App\Http\Controllers\TU\TUPembimbingLapanganController::class, 'destroy'])->name('pembimbing-lapangan.destroy');
     Route::post('/pembimbing-lapangan/{user}/activate', [\App\Http\Controllers\TU\TUPembimbingLapanganController::class, 'activate'])->name('pembimbing-lapangan.activate');
     Route::post('/pembimbing-lapangan/{user}/deactivate', [\App\Http\Controllers\TU\TUPembimbingLapanganController::class, 'deactivate'])->name('pembimbing-lapangan.deactivate');
     Route::post('/pembimbing-lapangan/{user}/reset-password', [\App\Http\Controllers\TU\TUPembimbingLapanganController::class, 'resetPassword'])->name('pembimbing-lapangan.reset-password');

@@ -2,7 +2,7 @@ import { PropsWithChildren, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard, FileText, ClipboardList, Award, Bell,
-    Menu, LogOut, BookOpen, Activity, BellRing, X,
+    Menu, LogOut, BookOpen, Activity, BellRing, X, FileCheck,
     AlertCircle, CheckCircle2, ShieldAlert, Building,
 } from 'lucide-react';
 import { getAvatarUrl } from '@/utils/avatar';
@@ -27,6 +27,7 @@ export default function DosenLayout({ children }: PropsWithChildren) {
         { href: '/dosen/monitoring', label: 'Monitoring Mahasiswa', icon: Activity },
         { href: '/dosen/review-proposal', label: 'Review Proposal', icon: FileText },
         { href: '/dosen/logbook', label: 'Logbook Mahasiswa', icon: ClipboardList },
+        { href: '/dosen/laporan-akhir', label: 'Laporan Akhir', icon: FileCheck },
         { href: '/dosen/penilaian', label: t('nav.penilaian', undefined, 'Penilaian Akhir'), icon: Award },
         { href: '/panduan', label: t('nav.panduan', undefined, 'Buku Panduan & SOP'), icon: BookOpen },
     ];
